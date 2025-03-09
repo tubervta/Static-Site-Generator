@@ -19,7 +19,8 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
             # Only generate HTML for markdown files
             if from_path.endswith(".md"):
                 dest_path = Path(dest_path).with_suffix(".html")
-                generate_page(from_path, template_path, dest_path, basepath)
+                # Remove the basepath parameter
+                generate_page(from_path, template_path, dest_path)
         else:  # If it's a directory
             os.makedirs(dest_path, exist_ok=True)  # Ensure directory exists
             generate_pages_recursive(from_path, template_path, dest_path, basepath)
