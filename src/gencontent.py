@@ -26,10 +26,8 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
 
 
 def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
-    # Ensure basepath is properly formatted (no leading slash but has trailing slash)
-    if basepath.startswith('/'):
-        basepath = basepath[1:]
-    if not basepath.endswith('/') and basepath != "":
+    # Ensure basepath is properly formatted (ends with trailing slash)
+    if not basepath.endswith('/'):
         basepath += '/'
     
     # Read markdown file
@@ -55,9 +53,9 @@ def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
     html = template.replace('{{ Title }}', title)
     html = html.replace('{{ Content }}', html_content)
     
-    # Add basepath replacement for links and resources
-    html = html.replace('href="/', f'href="/{basepath}')
-    html = html.replace('src="/', f'src="/{basepath}')
+    # Fix the basepath replacement (remove the extra slash)
+    html = html.replace('href="/', f'href="{basepath}')
+    html = html.replace('src="/', f'src="{basepath}')
     
     # Ensure directory exists
     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
