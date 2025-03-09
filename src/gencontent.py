@@ -38,6 +38,9 @@ def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
     md = markdown.Markdown(extensions=['meta'])
     html_content = md.convert(md_content)
     
+    # Replace <em> tags with <i> tags for compatibility
+    html_content = html_content.replace("<em>", "<i>").replace("</em>", "</i>")
+    
     # Get title from metadata or filename
     if hasattr(md, 'Meta') and 'title' in md.Meta and md.Meta['title']:
         title = md.Meta['title'][0]
@@ -53,7 +56,7 @@ def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
     html = template.replace('{{ Title }}', title)
     html = html.replace('{{ Content }}', html_content)
     
-    # Fix the basepath replacement (remove the extra slash)
+    # Fix the basepath replacement
     html = html.replace('href="/', f'href="{basepath}')
     html = html.replace('src="/', f'src="{basepath}')
     
