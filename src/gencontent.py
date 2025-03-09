@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 from markdown_blocks import markdown_to_html_node
+import markdown
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
     for filename in os.listdir(dir_path_content):
         from_path = os.path.join(dir_path_content, filename)
 
@@ -18,34 +19,52 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             # Only generate HTML for markdown files
             if from_path.endswith(".md"):
                 dest_path = Path(dest_path).with_suffix(".html")
-                generate_page(from_path, template_path, dest_path)
+                generate_page(from_path, template_path, dest_path, basepath)
         else:  # If it's a directory
             os.makedirs(dest_path, exist_ok=True)  # Ensure directory exists
-            generate_pages_recursive(from_path, template_path, dest_path)
+            generate_pages_recursive(from_path, template_path, dest_path, basepath)
 
 
-def generate_page(from_path, template_path, dest_path):
-    print(f" * {from_path} {template_path} -> {dest_path}")
-    from_file = open(from_path, "r")
-    markdown_content = from_file.read()
-    from_file.close()
-
-    template_file = open(template_path, "r")
-    template = template_file.read()
-    template_file.close()
-
-    node = markdown_to_html_node(markdown_content)
-    html = node.to_html()
-
-    title = extract_title(markdown_content)
-    template = template.replace("{{ Title }}", title)
-    template = template.replace("{{ Content }}", html)
-
-    dest_dir_path = os.path.dirname(dest_path)
-    if dest_dir_path != "":
-        os.makedirs(dest_dir_path, exist_ok=True)
-    to_file = open(dest_path, "w")
-    to_file.write(template)
+def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
+    # Ensure basepath is properly formatted (no leading slash but has trailing slash)
+    if basepath.startswith('/'):
+        basepath = basepath[1:]
+    if not basepath.endswith('/') and basepath != "":
+        basepath += '/'
+    
+    # Read markdown file
+    with open(md_file_path, 'r') as file:
+        md_content = file.read()
+    
+    # Parse markdown to HTML
+    md = markdown.Markdown(extensions=['meta'])
+    html_content = md.convert(md_content)
+    
+    # Get title from metadata or filename
+    if hasattr(md, 'Meta') and 'title' in md.Meta and md.Meta['title']:
+        title = md.Meta['title'][0]
+    else:
+        # Fallback to using filename as title
+        title = os.path.splitext(os.path.basename(md_file_path))[0]
+    
+    # Read template
+    with open(template_path, 'r') as file:
+        template = file.read()
+    
+    # Replace placeholders
+    html = template.replace('{{ Title }}', title)
+    html = html.replace('{{ Content }}', html_content)
+    
+    # Add basepath replacement for links and resources
+    html = html.replace('href="/', f'href="/{basepath}')
+    html = html.replace('src="/', f'src="/{basepath}')
+    
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    
+    # Write output file
+    with open(output_file_path, 'w') as file:
+        file.write(html)
 
 
 def extract_title(md):
