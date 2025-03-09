@@ -27,11 +27,14 @@ def generate_page(from_path, template_path, dest_path, basepath):
     node = markdown_to_html_node(markdown_content)
     html = node.to_html()
 
+    with open(from_path, 'r') as md_file:
+        content = md_file.read()
+        
     title = extract_title(markdown_content)
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
-    template = template.replace('href="/', 'href="' + basepath)
-    template = template.replace('src="/', 'src="' + basepath)
+    content = content.replace('href="/', f'href="{basepath}')
+    content = content.replace('src="/', f'src="{basepath}')
 
     dest_dir_path = os.path.dirname(dest_path)
     if dest_dir_path != "":
