@@ -25,46 +25,33 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
             generate_pages_recursive(from_path, template_path, dest_path, basepath)
 
 
-def generate_page(md_file_path, template_path, output_file_path, basepath="/"):
-    # Ensure basepath is properly formatted (ends with trailing slash)
-    if not basepath.endswith('/'):
-        basepath += '/'
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     
     # Read markdown file
-    with open(md_file_path, 'r') as file:
+    with open(from_path, 'r') as file:
         md_content = file.read()
     
-    # Parse markdown to HTML
-    md = markdown.Markdown(extensions=['meta'])
-    html_content = md.convert(md_content)
-    
-    # Replace <em> tags with <i> tags for compatibility
-    html_content = html_content.replace("<em>", "<i>").replace("</em>", "</i>")
-    
-    # Get title from metadata or filename
-    if hasattr(md, 'Meta') and 'title' in md.Meta and md.Meta['title']:
-        title = md.Meta['title'][0]
-    else:
-        # Fallback to using filename as title
-        title = os.path.splitext(os.path.basename(md_file_path))[0]
-    
-    # Read template
+    # Read template file
     with open(template_path, 'r') as file:
         template = file.read()
+    
+    # Convert markdown to HTML using your function
+    html_node = markdown_to_html_node(md_content)
+    html_content = html_node.to_html()
+    
+    # Extract title
+    title = extract_title(md_content)
     
     # Replace placeholders
     html = template.replace('{{ Title }}', title)
     html = html.replace('{{ Content }}', html_content)
     
-    # Fix the basepath replacement
-    html = html.replace('href="/', f'href="{basepath}')
-    html = html.replace('src="/', f'src="{basepath}')
-    
     # Ensure directory exists
-    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     
     # Write output file
-    with open(output_file_path, 'w') as file:
+    with open(dest_path, 'w') as file:
         file.write(html)
 
 
